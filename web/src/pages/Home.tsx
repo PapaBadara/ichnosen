@@ -53,7 +53,7 @@ export function Home() {
   return (
     <div>
       <h1 style={{ fontSize: 32, color: "var(--brand-cream)", marginBottom: 8 }}>
-        Ichnosen — Microfossiles du Sénégal
+        Ichnosen : Microfossiles du Sénégal
       </h1>
       <p style={{ color: "var(--text-secondary)", maxWidth: 680, marginBottom: 28 }}>
         Base de données consolidée de foraminifères et ostracodes issus des travaux de Sarr et al.

@@ -79,7 +79,7 @@ export function MapPage() {
         }}
       >
         <strong style={{ color: "var(--brand-cream)" }}>{geo.length}</strong> occurrences géolocalisées sur{" "}
-        <strong style={{ color: "var(--brand-cream)" }}>{filtered.length}</strong> — un point par localité.
+        <strong style={{ color: "var(--brand-cream)" }}>{filtered.length}</strong>, un point par localité.
       </p>
 
       <div style={{ height: 540, borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)", marginBottom: 32 }}>

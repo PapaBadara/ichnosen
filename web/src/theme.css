@@ -10,7 +10,7 @@
   /* Ink */
   --text-primary: #ece6de;
   --text-secondary: #b3a99b;
-  --text-muted: #746b5f;
+  --text-muted: #958a7b;
   --gridline: #2a251e;
   --baseline: #3a3327;
   --border: rgba(255, 255, 255, 0.08);
@@ -21,7 +21,7 @@
   --brand-black: #000000;
 
   /* Categorical (validated: adjacent-safe for all 6, all-pairs-safe for the first 3) */
-  --series-1: #c5782d; /* copper — brand */
+  --series-1: #c5782d; /* copper, brand */
   --series-2: #2f9e8f; /* teal */
   --series-3: #7a5fb0; /* violet */
   --series-4: #c0524f; /* rose */

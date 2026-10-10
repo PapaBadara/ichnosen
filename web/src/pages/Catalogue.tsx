@@ -102,7 +102,7 @@ export function Catalogue() {
             marginBottom: 16,
           }}
         >
-          Fiche ouverte directement depuis la carte — ce taxon est hors des filtres actifs de la barre latérale.{" "}
+          Fiche ouverte directement depuis la carte : ce taxon est hors des filtres actifs de la barre latérale.{" "}
           <button
             onClick={() => setParams({})}
             style={{ background: "none", border: "none", color: "var(--brand-copper)", cursor: "pointer", padding: 0 }}
@@ -209,7 +209,7 @@ export function Catalogue() {
                                   whiteSpace: "nowrap",
                                 }}
                               >
-                                {(row[col.key] as string) ?? "—"}
+                                {(row[col.key] as string) ?? "-"}
                               </td>
                             ))}
                           </tr>

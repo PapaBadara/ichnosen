@@ -1,6 +1,6 @@
 import type { TaxonGroup } from "../types";
 
-/** The data has no separate Genre/Famille columns — nom_taxon is "Genre espèce...".
+/** The data has no separate Genre/Famille columns; nom_taxon is "Genre espèce...".
  *  We derive the genus as its first token, which is the closest honest proxy
  *  to the charter's "genre → famille → ordre" browser without fabricating data. */
 export function deriveGenre(nomTaxon: string | null): string {
