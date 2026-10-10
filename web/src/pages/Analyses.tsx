@@ -7,6 +7,7 @@ import { SectionTitle } from "../components/KpiCard";
 import { PageTitle } from "../components/PageTitle";
 import { ChartCard } from "../components/ChartCard";
 import { Tabs } from "../components/Tabs";
+import { DataTable } from "../components/DataTable";
 import { buildTree } from "../lib/hierarchy";
 import { SERIES_HEX, SEQUENTIAL_HEX, capCategories } from "../lib/colors";
 import { nivoTheme, chartTooltip } from "../lib/nivoTheme";
@@ -57,7 +58,7 @@ function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
 
   return (
     <div>
-      <SectionTitle>Hiérarchie taxonomique (groupe → classe → ordre)</SectionTitle>
+      <SectionTitle>Hiérarchie taxonomique (groupe, classe, ordre)</SectionTitle>
       <ChartCard height={420}>
         <ResponsiveSunburst
           data={sunburstData}
@@ -115,30 +116,19 @@ function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
       <SectionTitle>
         <span style={{ display: "block", marginTop: 32 }}>Nombre d'occurrences : Classe × Bassin</span>
       </SectionTitle>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
-            <th style={{ textAlign: "left", padding: "8px 12px" }}>Classe</th>
-            {bassins.map((b) => (
-              <th key={b} style={{ textAlign: "right", padding: "8px 12px" }}>
-                {b}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {pivot.map((row) => (
-            <tr key={row.Classe as string} style={{ borderBottom: "1px solid var(--gridline)" }}>
-              <td style={{ padding: "8px 12px" }}>{row.Classe}</td>
-              {bassins.map((b) => (
-                <td key={b} style={{ textAlign: "right", padding: "8px 12px" }}>
-                  {row[b as string]}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        rows={pivot}
+        columns={[
+          { key: "Classe", label: "Classe", value: (r) => r.Classe, filter: "text" },
+          ...bassins.map((b) => ({
+            key: String(b),
+            label: String(b),
+            value: (r: Record<string, string | number>) => r[String(b)],
+            align: "right" as const,
+          })),
+        ]}
+        rowKey={(r) => String(r.Classe)}
+      />
     </div>
   );
 }

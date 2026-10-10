@@ -1,0 +1,63 @@
+/* Fiches du catalogue (fenêtres de détail) */
+
+.taxon-head {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.taxon-photo {
+  position: relative;
+  height: 180px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.taxon-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.taxon-photo span {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(14, 12, 10, 0.75);
+  color: var(--brand-cream);
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.taxon-photo:hover span,
+.taxon-photo:focus-visible span {
+  opacity: 1;
+}
+
+.taxon-photo:hover {
+  border-color: var(--brand-copper);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .taxon-head,
+  .field-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .taxon-photo {
+    height: 220px;
+  }
+}

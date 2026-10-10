@@ -2,6 +2,7 @@ import { ResponsivePie } from "@nivo/pie";
 import { ResponsiveBar } from "@nivo/bar";
 import { groupByTaxon, useData } from "../context/DataContext";
 import { KpiCard, SectionTitle } from "../components/KpiCard";
+import { DataTable } from "../components/DataTable";
 import { SERIES_HEX } from "../lib/colors";
 import { nivoTheme, chartTooltip } from "../lib/nivoTheme";
 
@@ -60,14 +61,14 @@ export function Home() {
         (1998–2023) sur les bassins sénégalo-mauritanien et de Casamance.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 32 }}>
         <KpiCard value={taxa.length} label="Taxons filtrés" />
         <KpiCard value={filtered.length} label="Occurrences" />
         <KpiCard value={nBassins} label="Bassins" />
         <KpiCard value={nAges} label="Âges géologiques" />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, marginBottom: 32 }}>
         <div>
           <SectionTitle>Répartition par groupe</SectionTitle>
           <div style={{ height: 300, background: "var(--surface-1)", borderRadius: 12, border: "1px solid var(--border)" }}>
@@ -135,28 +136,17 @@ export function Home() {
       </div>
 
       <SectionTitle>Résumé par bassin</SectionTitle>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
-            <th style={{ textAlign: "left", padding: "8px 12px" }}>Bassin</th>
-            <th style={{ textAlign: "right", padding: "8px 12px" }}>Taxons</th>
-            <th style={{ textAlign: "right", padding: "8px 12px" }}>Occurrences</th>
-            <th style={{ textAlign: "right", padding: "8px 12px" }}>Classes</th>
-            <th style={{ textAlign: "right", padding: "8px 12px" }}>Âges</th>
-          </tr>
-        </thead>
-        <tbody>
-          {summary.map((row) => (
-            <tr key={row.Bassin} style={{ borderBottom: "1px solid var(--gridline)" }}>
-              <td style={{ padding: "8px 12px" }}>{row.Bassin}</td>
-              <td style={{ textAlign: "right", padding: "8px 12px" }}>{row.Taxons}</td>
-              <td style={{ textAlign: "right", padding: "8px 12px" }}>{row.Occurrences}</td>
-              <td style={{ textAlign: "right", padding: "8px 12px" }}>{row.Classes}</td>
-              <td style={{ textAlign: "right", padding: "8px 12px" }}>{row.Ages}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        rows={summary}
+        columns={[
+          { key: "bassin", label: "Bassin", value: (r) => r.Bassin },
+          { key: "taxons", label: "Taxons", value: (r) => r.Taxons, align: "right" },
+          { key: "occ", label: "Occurrences", value: (r) => r.Occurrences, align: "right" },
+          { key: "classes", label: "Classes", value: (r) => r.Classes, align: "right" },
+          { key: "ages", label: "Âges", value: (r) => r.Ages, align: "right" },
+        ]}
+        rowKey={(r) => r.Bassin}
+      />
     </div>
   );
 }

@@ -1,0 +1,123 @@
+/* Visionneuse d'images plein écran */
+
+.iv {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 7, 5, 0.94);
+}
+
+.iv-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.iv-caption {
+  margin: 0;
+  color: var(--brand-cream);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.iv-controls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--brand-cream);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.iv-controls button:hover:not(:disabled) {
+  border-color: var(--brand-copper);
+}
+
+.iv-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.iv-level {
+  min-width: 64px !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.iv-close {
+  margin-left: 8px;
+}
+
+.iv-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.iv-stage.is-zoomed {
+  cursor: grab;
+}
+
+.iv-stage.is-zoomed:active {
+  cursor: grabbing;
+}
+
+.iv-stage img {
+  /* Les photos sources sont petites (~300 px) : on les agrandit jusqu'à la hauteur disponible. */
+  height: min(calc(100vh - 160px), 900px);
+  width: auto;
+  max-width: 92vw;
+  object-fit: contain;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  user-select: none;
+  transition: transform 0.12s ease-out;
+}
+
+.iv-hint {
+  margin: 0;
+  padding: 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .iv-bar {
+    padding: 10px 12px;
+  }
+
+  .iv-caption {
+    font-size: 15px;
+  }
+
+  .iv-hint {
+    display: none;
+  }
+}

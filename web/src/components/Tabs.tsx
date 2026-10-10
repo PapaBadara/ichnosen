@@ -11,7 +11,16 @@ export function Tabs({ tabs }: { tabs: Tab[] }) {
   const [active, setActive] = useState(0);
   return (
     <div>
-      <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)", marginBottom: 20 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          borderBottom: "1px solid var(--border)",
+          marginBottom: 20,
+          overflowX: "auto",
+          scrollbarWidth: "none",
+        }}
+      >
         {tabs.map((tab, i) => (
           <button
             key={tab.label}
@@ -28,6 +37,7 @@ export function Tabs({ tabs }: { tabs: Tab[] }) {
               fontSize: 14,
               fontWeight: i === active ? 600 : 500,
               cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
           >
             {tab.icon && (

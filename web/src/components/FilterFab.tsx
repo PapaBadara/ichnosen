@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { SlidersHorizontal, X, Download } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { groupByTaxon, useData } from "../context/DataContext";
 import { FilterGroup } from "./FilterGroup";
-import { exportCsv, exportJson } from "../lib/export";
 
 export function FilterFab() {
   const [open, setOpen] = useState(false);
@@ -103,53 +102,11 @@ export function FilterFab() {
             onChange={(v) => setFilters({ ...filters, references: v })}
           />
 
-          <p style={{ fontSize: 12, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 14, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 14, marginBottom: 0 }}>
             <strong style={{ color: "var(--brand-cream)" }}>{taxonCount}</strong> taxons affichés sur{" "}
             <strong style={{ color: "var(--brand-cream)" }}>{allTaxonCount}</strong> total ·{" "}
             <strong style={{ color: "var(--brand-cream)" }}>{filtered.length}</strong> occurrences
           </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => exportCsv(filtered, "ichnosen-occurrences-filtrees.csv")}
-              style={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                border: "1px solid var(--border)",
-                background: "var(--surface-2)",
-                color: "var(--text-secondary)",
-                borderRadius: 8,
-                padding: "6px 8px",
-                fontSize: 11,
-                cursor: "pointer",
-              }}
-            >
-              <Download size={13} strokeWidth={1.75} aria-hidden />
-              CSV
-            </button>
-            <button
-              onClick={() => exportJson(filtered, "ichnosen-occurrences-filtrees.json")}
-              style={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                border: "1px solid var(--border)",
-                background: "var(--surface-2)",
-                color: "var(--text-secondary)",
-                borderRadius: 8,
-                padding: "6px 8px",
-                fontSize: 11,
-                cursor: "pointer",
-              }}
-            >
-              <Download size={13} strokeWidth={1.75} aria-hidden />
-              JSON
-            </button>
-          </div>
         </div>
       )}
 

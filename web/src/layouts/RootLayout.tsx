@@ -6,7 +6,7 @@ export function RootLayout() {
   return (
     <div style={{ minHeight: "100vh" }}>
       <Navbar />
-      <main style={{ padding: "32px 40px", maxWidth: 1280, margin: "0 auto" }}>
+      <main className="app-main">
         <Outlet />
       </main>
       <FilterFab />

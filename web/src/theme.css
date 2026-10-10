@@ -28,7 +28,7 @@
   --series-5: #a8932c; /* olive-gold */
   --series-6: #3d7ab8; /* blue */
 
-  /* Sequential (single hue: copper), low -> high magnitude */
+  /* Sequential (single hue: copper), from low to high magnitude */
   --seq-1: #3a2c1c;
   --seq-2: #6b4a26;
   --seq-3: #96612c;
@@ -99,4 +99,17 @@ table {
    (no dark basemap is available without a paid/keyed provider). */
 .map-tiles-dark {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.9);
+}
+
+/* Contenu des pages de la base */
+.app-main {
+  padding: 32px 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .app-main {
+    padding: 24px 16px;
+  }
 }

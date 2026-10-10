@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   ClipboardList,
-  Search,
   ListTree,
   Microscope,
   MapPin,
@@ -12,24 +11,18 @@ import {
   Globe,
   StickyNote,
   BookMarked,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import { groupByTaxon, useData } from "../context/DataContext";
-import { SectionTitle } from "../components/KpiCard";
 import { PageTitle } from "../components/PageTitle";
 import { Tabs } from "../components/Tabs";
 import { TaxonTree } from "../components/TaxonTree";
-import { exportCsv, exportJson } from "../lib/export";
+import { DataTable, type Column } from "../components/DataTable";
+import { Modal } from "../components/Modal";
+import { ImageViewer } from "../components/ImageViewer";
 import type { Occurrence, TaxonGroup } from "../types";
-
-const DISPLAY_COLS: { key: keyof TaxonGroup; label: string }[] = [
-  { key: "nom_taxon", label: "Nom_taxon" },
-  { key: "groupe", label: "Groupe" },
-  { key: "sous_type", label: "Sous-type" },
-  { key: "classe", label: "Classe" },
-  { key: "groupe_ordre", label: "Groupe/Ordre" },
-  { key: "decouvreur", label: "Découvreur" },
-];
+import "./catalogue.css";
 
 const CLASSIFICATION_FIELDS: { key: keyof TaxonGroup; label: string }[] = [
   { key: "regne", label: "Règne" },
@@ -40,228 +33,155 @@ const CLASSIFICATION_FIELDS: { key: keyof TaxonGroup; label: string }[] = [
   { key: "decouvreur", label: "Découvreur" },
 ];
 
+type Photo = { src: string; alt: string };
+
+function Thumb({ taxon, onOpen }: { taxon: { photo: string | null; nom_taxon: string }; onOpen: (p: Photo) => void }) {
+  if (!taxon.photo) return <span className="dt-null">-</span>;
+  return (
+    <button
+      className="dt-thumb"
+      onClick={() => onOpen({ src: taxon.photo!, alt: taxon.nom_taxon })}
+      title="Agrandir la photo"
+      aria-label={`Agrandir la photo de ${taxon.nom_taxon}`}
+    >
+      <img src={taxon.photo} alt="" loading="lazy" />
+    </button>
+  );
+}
+
+const taxonSearchText = (t: TaxonGroup) =>
+  [
+    t.nom_taxon,
+    t.groupe,
+    t.sous_type,
+    t.classe,
+    t.groupe_ordre,
+    t.decouvreur,
+    ...t.occurrences.flatMap((o) => Object.values(o).filter((v) => v !== null)),
+  ].join(" ");
+
+const occurrenceSearchText = (o: Occurrence) => Object.values(o).filter((v) => v !== null).join(" ");
+
 export function Catalogue() {
   const { all, filtered } = useData();
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
+  const [occDetail, setOccDetail] = useState<Occurrence | null>(null);
+  const [photo, setPhoto] = useState<Photo | null>(null);
 
   const allTaxa = useMemo(() => groupByTaxon(all), [all]);
   const filteredTaxa = useMemo(() => groupByTaxon(filtered), [filtered]);
 
-  const directTaxonId = params.get("taxon");
-  const directTaxon = directTaxonId ? allTaxa.find((t) => t.taxon_id === directTaxonId) ?? null : null;
-  const directOutsideFilters = !!directTaxon && !filteredTaxa.some((t) => t.taxon_id === directTaxon.taxon_id);
+  // La fiche ouverte est portée par l'URL (?taxon=…) : liens depuis la carte ou la page d'accueil.
+  const taxonId = params.get("taxon");
+  const taxonDetail = taxonId ? allTaxa.find((t) => t.taxon_id === taxonId) ?? null : null;
 
-  useEffect(() => {
-    if (directTaxon) setSelected(directTaxon.taxon_id);
-  }, [directTaxonId]);
+  const openTaxon = useCallback((id: string) => setParams({ taxon: id }), [setParams]);
+  const closeTaxon = useCallback(() => setParams({}), [setParams]);
+  const closeOcc = useCallback(() => setOccDetail(null), []);
+  const closePhoto = useCallback(() => setPhoto(null), []);
 
-  const results = useMemo(() => {
-    if (!search.trim()) return filteredTaxa;
-    const q = search.toLowerCase();
-    return filteredTaxa.filter(
-      (taxon) =>
-        Object.values(taxon).some((v) => v !== null && typeof v !== "object" && String(v).toLowerCase().includes(q)) ||
-        taxon.occurrences.some((occ) =>
-          Object.values(occ).some((v) => v !== null && String(v).toLowerCase().includes(q))
-        )
-    );
-  }, [filteredTaxa, search]);
+  const taxonColumns: Column<TaxonGroup>[] = [
+    { key: "photo", label: "Photo", value: (t) => (t.photo ? 1 : 0), render: (t) => <Thumb taxon={t} onOpen={setPhoto} />, width: 70, sortable: false },
+    { key: "nom", label: "Taxon", value: (t) => t.nom_taxon, render: (t) => <em>{t.nom_taxon}</em>, filter: "text" },
+    { key: "groupe", label: "Groupe", value: (t) => t.groupe, filter: "select" },
+    { key: "sous_type", label: "Sous-type", value: (t) => t.sous_type, filter: "select" },
+    { key: "classe", label: "Classe", value: (t) => t.classe, filter: "select" },
+    { key: "ordre", label: "Groupe/Ordre", value: (t) => t.groupe_ordre, filter: "select" },
+    { key: "decouvreur", label: "Découvreur", value: (t) => t.decouvreur, filter: "text" },
+    { key: "n", label: "Occurrences", value: (t) => t.occurrences.length, align: "right" },
+  ];
 
-  const detail = directTaxon ?? results.find((r) => r.taxon_id === selected) ?? results[0] ?? null;
-
-  function selectFromTree(taxonId: string) {
-    setParams({});
-    setSelected(taxonId);
-  }
-
-  const exportRows = results.map((t) => ({
-    nom_taxon: t.nom_taxon,
-    groupe: t.groupe,
-    sous_type: t.sous_type,
-    classe: t.classe,
-    groupe_ordre: t.groupe_ordre,
-    decouvreur: t.decouvreur,
-    nb_occurrences: t.occurrences.length,
-  }));
+  const occColumns: Column<Occurrence>[] = [
+    { key: "taxon", label: "Taxon", value: (o) => o.nom_taxon, render: (o) => <em>{o.nom_taxon}</em>, filter: "text" },
+    { key: "groupe", label: "Groupe", value: (o) => o.groupe, filter: "select" },
+    { key: "localite", label: "Localité", value: (o) => o.locality_nom, filter: "select" },
+    { key: "bassin", label: "Bassin", value: (o) => o.bassin, filter: "select" },
+    { key: "age", label: "Âge", value: (o) => o.age, filter: "select" },
+    { key: "reference", label: "Référence", value: (o) => o.reference_citation, filter: "select" },
+  ];
 
   return (
     <div>
       <PageTitle icon={ClipboardList}>Catalogue des taxons</PageTitle>
 
-      {directOutsideFilters && (
-        <p
-          style={{
-            background: "var(--surface-2)",
-            border: "1px solid var(--brand-copper)",
-            borderRadius: 10,
-            padding: "10px 14px",
-            color: "var(--text-secondary)",
-            fontSize: 13,
-            marginBottom: 16,
-          }}
+      <Tabs
+        tabs={[
+          {
+            label: "Taxons",
+            icon: Microscope,
+            content: (
+              <DataTable
+                rows={filteredTaxa}
+                columns={taxonColumns}
+                rowKey={(t) => t.taxon_id}
+                searchText={taxonSearchText}
+                searchPlaceholder="Rechercher un taxon (nom, découvreur, description, site…)"
+                onView={(t) => openTaxon(t.taxon_id)}
+              />
+            ),
+          },
+          {
+            label: "Occurrences",
+            icon: Layers,
+            content: (
+              <DataTable
+                rows={filtered}
+                columns={occColumns}
+                rowKey={(o) => o.id}
+                searchText={occurrenceSearchText}
+                searchPlaceholder="Rechercher dans les occurrences (stratigraphie, description, notes…)"
+                onView={setOccDetail}
+              />
+            ),
+          },
+          {
+            label: "Navigateur taxonomique",
+            icon: ListTree,
+            content: (
+              <div style={{ marginBottom: 32 }}>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12 }}>
+                  Hiérarchie : groupe, ordre, genre (dérivé du nom scientifique), puis espèce. Cliquer une espèce ouvre sa fiche.
+                </p>
+                <TaxonTree taxa={filteredTaxa} onSelect={openTaxon} />
+              </div>
+            ),
+          },
+        ]}
+      />
+
+      {taxonDetail && (
+        <Modal
+          title={<em>{taxonDetail.nom_taxon}</em>}
+          subtitle={`${taxonDetail.groupe} · ${taxonDetail.occurrences.length} occurrence${taxonDetail.occurrences.length > 1 ? "s" : ""}`}
+          onClose={closeTaxon}
         >
-          Fiche ouverte directement depuis la carte : ce taxon est hors des filtres actifs de la barre latérale.{" "}
+          <TaxonSheet taxon={taxonDetail} onPhoto={setPhoto} />
+        </Modal>
+      )}
+
+      {occDetail && (
+        <Modal
+          title={<em>{occDetail.nom_taxon}</em>}
+          subtitle={[occDetail.locality_nom, occDetail.age].filter(Boolean).join(" · ")}
+          onClose={closeOcc}
+        >
+          <OccurrenceCard occ={occDetail} />
           <button
-            onClick={() => setParams({})}
-            style={{ background: "none", border: "none", color: "var(--brand-copper)", cursor: "pointer", padding: 0 }}
+            className="dt-view"
+            style={{ marginTop: 16 }}
+            onClick={() => {
+              setOccDetail(null);
+              openTaxon(occDetail.taxon_id);
+            }}
           >
-            Revenir à la recherche
+            <Microscope size={14} strokeWidth={1.75} aria-hidden />
+            Voir la fiche du taxon
           </button>
-        </p>
+        </Modal>
       )}
 
-      <div>
-        <Tabs
-          tabs={[
-            {
-              label: "Recherche",
-              icon: Search,
-              content: (
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                    <div style={{ position: "relative", flex: 1 }}>
-                      <Search
-                        size={16}
-                        strokeWidth={1.75}
-                        color="var(--text-muted)"
-                        style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }}
-                        aria-hidden
-                      />
-                      <input
-                        type="text"
-                        placeholder="Rechercher un taxon (nom, découvreur, description, site…)"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "10px 14px 10px 40px",
-                          borderRadius: 10,
-                          border: "1px solid var(--border)",
-                          background: "var(--surface-1)",
-                          color: "var(--text-primary)",
-                          fontSize: 14,
-                        }}
-                      />
-                    </div>
-                    <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0, whiteSpace: "nowrap" }}>
-                      <strong style={{ color: "var(--brand-cream)" }}>{results.length}</strong> résultats
-                    </p>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <ExportButton label="CSV" onClick={() => exportCsv(exportRows, "ichnosen-taxons.csv")} />
-                      <ExportButton label="JSON" onClick={() => exportJson(exportRows, "ichnosen-taxons.json")} />
-                    </div>
-                  </div>
-
-                  <div
-                    className="scrollbar-thin"
-                    style={{
-                      maxHeight: 320,
-                      overflowY: "auto",
-                      border: "1px solid var(--border)",
-                      borderRadius: 12,
-                      marginBottom: 32,
-                    }}
-                  >
-                    <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ background: "var(--surface-1)", position: "sticky", top: 0 }}>
-                          {DISPLAY_COLS.map((col) => (
-                            <th
-                              key={col.key}
-                              style={{
-                                textAlign: "left",
-                                padding: "8px 10px",
-                                color: "var(--text-secondary)",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {col.label}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {results.map((row) => (
-                          <tr
-                            key={row.taxon_id}
-                            onClick={() => {
-                              setParams({});
-                              setSelected(row.taxon_id);
-                            }}
-                            style={{
-                              cursor: "pointer",
-                              background: row.taxon_id === detail?.taxon_id ? "var(--surface-2)" : "transparent",
-                              borderBottom: "1px solid var(--gridline)",
-                            }}
-                          >
-                            {DISPLAY_COLS.map((col) => (
-                              <td
-                                key={col.key}
-                                title={row[col.key] !== null ? String(row[col.key]) : undefined}
-                                style={{
-                                  padding: "7px 10px",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {(row[col.key] as string) ?? "-"}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              label: "Navigateur taxonomique",
-              icon: ListTree,
-              content: (
-                <div style={{ marginBottom: 32 }}>
-                  <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12 }}>
-                    Groupe → ordre → genre (dérivé du nom scientifique) → espèce. Cliquer une espèce ouvre sa fiche.
-                  </p>
-                  <TaxonTree taxa={filteredTaxa} onSelect={selectFromTree} />
-                </div>
-              ),
-            },
-          ]}
-        />
-      </div>
-
-      <SectionTitle>Fiche détaillée</SectionTitle>
-      {!detail ? (
-        <p style={{ color: "var(--text-muted)" }}>Aucun taxon disponible.</p>
-      ) : (
-        <TaxonSheet taxon={detail} />
-      )}
+      {photo && <ImageViewer src={photo.src} alt={photo.alt} onClose={closePhoto} />}
     </div>
-  );
-}
-
-function ExportButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        border: "1px solid var(--border)",
-        background: "var(--surface-1)",
-        color: "var(--text-secondary)",
-        borderRadius: 8,
-        padding: "6px 12px",
-        fontSize: 12,
-        cursor: "pointer",
-      }}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -294,41 +214,23 @@ function FieldGroupTitle({ icon: Icon, children }: { icon: LucideIcon; children:
   );
 }
 
-function TaxonSheet({ taxon }: { taxon: TaxonGroup }) {
+function TaxonSheet({ taxon, onPhoto }: { taxon: TaxonGroup; onPhoto: (p: Photo) => void }) {
   return (
-    <div
-      style={{
-        background: "var(--surface-1)",
-        border: "1px solid var(--border)",
-        borderRadius: 12,
-        padding: 24,
-      }}
-    >
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--brand-cream)", marginBottom: 4 }}>
-        {taxon.nom_taxon}
-      </h2>
-      <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "0 0 16px" }}>
-        {taxon.occurrences.length} occurrence{taxon.occurrences.length > 1 ? "s" : ""}
-      </p>
-
-      <div style={{ display: "grid", gridTemplateColumns: taxon.photo ? "180px 1fr" : "1fr", gap: 24, marginBottom: 20 }}>
+    <div>
+      <div className="taxon-head" style={{ gridTemplateColumns: taxon.photo ? "200px 1fr" : "1fr" }}>
         {taxon.photo && (
-          <img
-            src={taxon.photo}
-            alt={taxon.nom_taxon}
-            style={{
-              width: "100%",
-              height: 160,
-              objectFit: "contain",
-              background: "#ffffff",
-              borderRadius: 8,
-              border: "1px solid var(--border)",
-            }}
-          />
+          <button
+            className="taxon-photo"
+            onClick={() => onPhoto({ src: taxon.photo!, alt: taxon.nom_taxon })}
+            title="Agrandir la photo"
+          >
+            <img src={taxon.photo} alt={taxon.nom_taxon} />
+            <span>Agrandir</span>
+          </button>
         )}
         <div>
           <FieldGroupTitle icon={Microscope}>Classification</FieldGroupTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <div className="field-grid">
             {CLASSIFICATION_FIELDS.map((f) => (
               <Field key={f.key} label={f.label} value={taxon[f.key]} />
             ))}
@@ -356,7 +258,7 @@ function OccurrenceCard({ occ }: { occ: Occurrence }) {
         padding: 16,
       }}
     >
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 12 }}>
+      <div className="field-grid" style={{ marginBottom: 12 }}>
         <div>
           <FieldGroupTitle icon={Clock}>Contexte</FieldGroupTitle>
           <Field label="Localité" value={occ.locality_nom} />
@@ -380,7 +282,7 @@ function OccurrenceCard({ occ }: { occ: Occurrence }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="field-grid">
         {occ.paleoenv && (
           <div>
             <FieldGroupTitle icon={Waves}>Paléoenvironnement</FieldGroupTitle>

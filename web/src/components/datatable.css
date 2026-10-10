@@ -1,0 +1,341 @@
+/* Tableau de données : recherche, filtres à facettes, tri, pagination */
+
+.dt {
+  margin-bottom: 32px;
+}
+
+.dt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.dt-search {
+  position: relative;
+  flex: 1 1 260px;
+  color: var(--text-muted);
+}
+
+.dt-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dt-search input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.dt-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.dt-count strong {
+  color: var(--brand-cream);
+}
+
+/* Filtres */
+
+.dt-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dt-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dt-filter select,
+.dt-filter input,
+.dt-size select {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.dt-filter.is-set select,
+.dt-filter.is-set input {
+  border-color: var(--brand-copper);
+}
+
+.dt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.dt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(197, 120, 45, 0.5);
+  background: rgba(197, 120, 45, 0.12);
+  color: var(--brand-cream);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dt-reset {
+  background: none;
+  border: none;
+  color: var(--brand-copper);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Tableau */
+
+.dt-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.dt-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dt-table th {
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 0;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.dt-table th:not(:has(button)) {
+  padding: 10px 12px;
+}
+
+.dt-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  justify-content: inherit;
+}
+
+/* Colonnes de chiffres : l'icône de tri passe à gauche pour que le libellé reste aligné sur les valeurs */
+th[style*="right"] .dt-sort {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.dt-sort:hover {
+  color: var(--brand-cream);
+}
+
+.dt-sort-icon {
+  display: inline-flex;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.dt-sort:hover .dt-sort-icon {
+  opacity: 0.5;
+}
+
+.dt-sort-icon.is-on {
+  opacity: 1;
+  color: var(--brand-copper);
+}
+
+.dt-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gridline);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.dt-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dt-table tbody tr:hover td {
+  background: var(--surface-1);
+}
+
+.dt-null {
+  color: var(--text-muted);
+}
+
+.dt-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 32px 12px !important;
+}
+
+.dt-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--brand-cream);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.dt-view:hover {
+  border-color: var(--brand-copper);
+}
+
+.dt-view svg {
+  color: var(--brand-copper);
+}
+
+/* Vignette cliquable */
+
+.dt-thumb {
+  display: block;
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #e4ddd3;
+  cursor: zoom-in;
+}
+
+.dt-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.dt-thumb:hover {
+  border-color: var(--brand-copper);
+}
+
+/* Pied : taille de page, plage, pagination */
+
+.dt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.dt-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dt-size select {
+  width: auto;
+  padding: 5px 8px;
+}
+
+.dt-range {
+  margin: 0;
+}
+
+.dt-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dt-pages button {
+  min-width: 34px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dt-pages button:hover:not(:disabled) {
+  color: var(--brand-cream);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dt-pages button.is-current {
+  background: var(--brand-copper);
+  border-color: var(--brand-copper);
+  color: #17140f;
+  font-weight: 600;
+}
+
+.dt-pages button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dt-ellipsis {
+  padding: 0 4px;
+}
+
+@media (max-width: 640px) {
+  .dt-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dt-pages {
+    justify-content: center;
+  }
+
+  .dt-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}

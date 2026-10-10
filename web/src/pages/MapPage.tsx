@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, Map as MapIcon } from "lucide-react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
@@ -8,13 +8,31 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useData } from "../context/DataContext";
 import { PageTitle } from "../components/PageTitle";
+import { DataTable } from "../components/DataTable";
+import { Modal } from "../components/Modal";
+import type { Occurrence } from "../types";
 import { colorScaleFor } from "../lib/colors";
 
 const CENTER: [number, number] = [14.3, -16.5];
 
+interface Site {
+  key: string;
+  lieu: string;
+  rows: Occurrence[];
+  nAges: number;
+  bassin: string | null;
+  taxons: number;
+  lat: number;
+  lon: number;
+  groupes: string;
+  ages: string[];
+}
+
 export function MapPage() {
   const { filtered } = useData();
   const [showSites, setShowSites] = useState(false);
+  const [siteDetail, setSiteDetail] = useState<Site | null>(null);
+  const closeSite = useCallback(() => setSiteDetail(null), []);
 
   const geo = useMemo(
     () => filtered.filter((t) => t.latitude !== null && t.longitude !== null),
@@ -24,7 +42,7 @@ export function MapPage() {
   const bassins = useMemo(() => Array.from(new Set(geo.map((t) => t.bassin).filter((b): b is string => !!b))).sort(), [geo]);
   const colorFor = useMemo(() => colorScaleFor(bassins), [bassins]);
 
-  const sites = useMemo(() => {
+  const sites = useMemo((): Site[] => {
     const groups = new Map<string, typeof geo>();
     geo.forEach((row) => {
       const key = `${row.locality_nom}__${row.locality_id}`;
@@ -35,9 +53,14 @@ export function MapPage() {
       .map(([key, rows]) => {
         const [lieu] = key.split("__");
         const groupes = Array.from(new Set(rows.map((r) => r.groupe))).sort().join(", ");
-        const ages = Array.from(new Set(rows.map((r) => r.age).filter(Boolean))).sort().join(" | ");
+        const ages = Array.from(new Set(rows.map((r) => r.age).filter((a): a is string => !!a))).sort((a, b) =>
+          a.localeCompare(b, "fr"),
+        );
         return {
+          key,
           lieu,
+          rows,
+          nAges: new Set(rows.map((r) => r.age).filter(Boolean)).size,
           bassin: rows[0].bassin,
           taxons: rows.length,
           lat: rows[0].latitude!,
@@ -112,7 +135,7 @@ export function MapPage() {
                   <em>{row.bassin}</em>
                   <br />
                   <Link to={`/catalogue?taxon=${row.taxon_id}`} style={{ fontSize: 12 }}>
-                    Voir la fiche →
+                    Voir la fiche
                   </Link>
                 </Popup>
               </CircleMarker>
@@ -143,29 +166,65 @@ export function MapPage() {
       </button>
 
       {showSites && (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, marginBottom: 32 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Lieu</th>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Bassin</th>
-              <th style={{ textAlign: "right", padding: "8px 10px" }}>Occurrences</th>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Groupes</th>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Âges</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sites.map((s) => (
-              <tr key={s.lieu} style={{ borderBottom: "1px solid var(--gridline)" }}>
-                <td style={{ padding: "7px 10px" }}>{s.lieu}</td>
-                <td style={{ padding: "7px 10px" }}>{s.bassin}</td>
-                <td style={{ textAlign: "right", padding: "7px 10px" }}>{s.taxons}</td>
-                <td style={{ padding: "7px 10px" }}>{s.groupes}</td>
-                <td style={{ padding: "7px 10px" }}>{s.ages}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          rows={sites}
+          columns={[
+            { key: "lieu", label: "Lieu", value: (s) => s.lieu, filter: "text" },
+            { key: "bassin", label: "Bassin", value: (s) => s.bassin, filter: "select" },
+            { key: "n", label: "Occurrences", value: (s) => s.taxons, align: "right" },
+            { key: "groupes", label: "Groupes", value: (s) => s.groupes, filter: "select" },
+            { key: "nAges", label: "Âges", value: (s) => s.nAges, align: "right" },
+          ]}
+          rowKey={(s) => s.key}
+          searchText={(s) => [s.lieu, s.bassin, s.groupes, s.ages.join(" "), ...s.rows.map((r) => r.nom_taxon)].join(" ")}
+          searchPlaceholder="Rechercher un site, un âge, un taxon…"
+          onView={setSiteDetail}
+        />
       )}
+
+      {siteDetail && (
+        <Modal
+          title={siteDetail.lieu}
+          subtitle={`${siteDetail.bassin ?? "Bassin non renseigné"} · ${siteDetail.taxons} occurrence${siteDetail.taxons > 1 ? "s" : ""}`}
+          onClose={closeSite}
+        >
+          <SiteSheet site={siteDetail} />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function SiteSheet({ site }: { site: Site }) {
+  const label = { color: "var(--brand-copper)", fontSize: 12, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.06em", margin: "0 0 8px" };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20, fontSize: 14, color: "var(--text-secondary)" }}>
+      <div>
+        <p style={label}>Localisation</p>
+        <p style={{ margin: 0 }}>
+          {site.lat.toFixed(4)}, {site.lon.toFixed(4)} · {site.groupes}
+        </p>
+      </div>
+      <div>
+        <p style={label}>Âges ({site.ages.length})</p>
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+          {site.ages.map((a) => (
+            <li key={a}>{a}</li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <p style={label}>Taxons signalés ({site.rows.length})</p>
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6, columns: "2 240px" }}>
+          {site.rows.map((r) => (
+            <li key={r.id}>
+              <Link to={`/catalogue?taxon=${r.taxon_id}`}>
+                <em>{r.nom_taxon}</em>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
