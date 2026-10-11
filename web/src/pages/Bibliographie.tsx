@@ -27,10 +27,10 @@ export function Bibliographie() {
               background: "var(--surface-1)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              padding: 20,
+              padding: "clamp(14px, 4vw, 20px)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "baseline", gap: "4px 12px" }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 17, color: "var(--brand-cream)", margin: 0 }}>
                 {ref.citation}
               </h3>

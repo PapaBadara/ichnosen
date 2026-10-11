@@ -23,7 +23,7 @@ export function TaxonTree({ taxa, onSelect }: { taxa: TaxonGroup[]; onSelect: (t
         borderRadius: 12,
         background: "var(--surface-1)",
         padding: 8,
-        maxHeight: 560,
+        maxHeight: "min(560px, 70dvh)",
         overflowY: "auto",
       }}
     >

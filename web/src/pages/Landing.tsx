@@ -10,6 +10,8 @@ import {
   Layers,
   MapPin,
   FlaskConical,
+  Menu,
+  X,
 } from "lucide-react";
 import { groupByTaxon, useData } from "../context/DataContext";
 import "./landing.css";
@@ -137,6 +139,14 @@ function SectionHead({
 export function Landing() {
   const { all, references } = useData();
   const activeSection = useActiveSection(SECTION_IDS);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   // Lien direct vers une section (ex. /#modules) : le contenu est rendu après le
   // chargement, le navigateur ne peut donc pas défiler seul jusqu'à l'ancre.
@@ -164,7 +174,7 @@ export function Landing() {
 
   return (
     <div className="lp">
-      <header className="lp-header">
+      <header className={`lp-header${menuOpen ? " is-open" : ""}`}>
         <a
           href="#presentation"
           className="lp-brand"
@@ -176,7 +186,7 @@ export function Landing() {
           <img src="/brand/logo-primary.svg" alt="" width={32} height={32} />
           Ichnosen
         </a>
-        <nav className="lp-nav" aria-label="Sections de la page">
+        <nav id="lp-menu" className="lp-nav" aria-label="Sections de la page">
           {SECTIONS.map((sec) => (
             <a
               key={sec.id}
@@ -185,6 +195,7 @@ export function Landing() {
               aria-current={activeSection === sec.id ? "location" : undefined}
               onClick={(e) => {
                 e.preventDefault();
+                setMenuOpen(false);
                 scrollToSection(sec.id);
               }}
             >
@@ -195,6 +206,16 @@ export function Landing() {
         <Link to="/accueil" className="lp-btn lp-btn--primary lp-btn--sm lp-header-cta">
           Explorer la base
         </Link>
+        <button
+          className="lp-burger"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-expanded={menuOpen}
+          aria-controls="lp-menu"
+          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+        >
+          {menuOpen ? <X size={20} strokeWidth={1.75} /> : <Menu size={20} strokeWidth={1.75} />}
+        </button>
+        {menuOpen && <div className="lp-backdrop" onClick={() => setMenuOpen(false)} />}
       </header>
 
       <section id="presentation" className="lp-hero">

@@ -5,12 +5,13 @@ import { BarChart3, Box, Waves, Layers } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { SectionTitle } from "../components/KpiCard";
 import { PageTitle } from "../components/PageTitle";
-import { ChartCard } from "../components/ChartCard";
+import { ChartCard, ChartLegend } from "../components/ChartCard";
 import { Tabs } from "../components/Tabs";
 import { DataTable } from "../components/DataTable";
 import { buildTree } from "../lib/hierarchy";
 import { SERIES_HEX, SEQUENTIAL_HEX, capCategories } from "../lib/colors";
 import { nivoTheme, chartTooltip } from "../lib/nivoTheme";
+import { truncate, useIsMobile } from "../lib/useIsMobile";
 import type { Occurrence } from "../types";
 
 export function Analyses() {
@@ -31,6 +32,7 @@ export function Analyses() {
 }
 
 function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
+  const isMobile = useIsMobile();
   const sunburstData = { id: "root", children: buildTree(rows, ["groupe", "classe", "groupe_ordre"]) };
 
   const ordreCounts = new Map<string, number>();
@@ -59,11 +61,11 @@ function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
   return (
     <div>
       <SectionTitle>Hiérarchie taxonomique (groupe, classe, ordre)</SectionTitle>
-      <ChartCard height={420}>
+      <ChartCard height={isMobile ? 320 : 420}>
         <ResponsiveSunburst
           data={sunburstData}
           theme={nivoTheme}
-          margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+          margin={isMobile ? { top: 8, right: 8, bottom: 8, left: 8 } : { top: 20, right: 20, bottom: 20, left: 20 }}
           id="id"
           value="value"
           cornerRadius={2}
@@ -75,7 +77,7 @@ function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
         />
       </ChartCard>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 24, marginTop: 32 }}>
         <div>
           <SectionTitle>Top 10 Ordres / Groupes</SectionTitle>
           <ChartCard height={320}>
@@ -85,9 +87,10 @@ function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
               keys={["n"]}
               indexBy="ordre"
               layout="horizontal"
-              margin={{ top: 10, right: 20, bottom: 30, left: 160 }}
+              margin={{ top: 10, right: 20, bottom: 30, left: isMobile ? 110 : 160 }}
               padding={0.25}
               colors={[SEQUENTIAL_HEX[3]]}
+              axisLeft={{ format: (v) => truncate(v, isMobile ? 16 : 26) }}
               enableLabel
               labelTextColor="#17140f"
               tooltip={chartTooltip}
@@ -134,6 +137,7 @@ function TaxonomieTab({ rows }: { rows: Occurrence[] }) {
 }
 
 function EnvTab({ rows }: { rows: Occurrence[] }) {
+  const isMobile = useIsMobile();
   const envCounts = new Map<string, number>();
   rows.forEach((r) => {
     const e = r.paleoenv;
@@ -183,9 +187,10 @@ function EnvTab({ rows }: { rows: Occurrence[] }) {
           keys={["n"]}
           indexBy="env"
           layout="horizontal"
-          margin={{ top: 10, right: 20, bottom: 30, left: 220 }}
+          margin={{ top: 10, right: 20, bottom: 30, left: isMobile ? 120 : 220 }}
           padding={0.25}
           colors={[SEQUENTIAL_HEX[3]]}
+          axisLeft={{ format: (v) => truncate(v, isMobile ? 18 : 34) }}
           tooltip={chartTooltip}
         />
       </ChartCard>
@@ -193,17 +198,18 @@ function EnvTab({ rows }: { rows: Occurrence[] }) {
       <SectionTitle>
         <span style={{ display: "block", marginTop: 32 }}>Environnement par bassin</span>
       </SectionTitle>
-      <ChartCard height={380}>
+      <ChartCard height={isMobile ? 300 : 380} legend={isMobile ? <ChartLegend keys={envKeys} colors={SERIES_HEX} /> : undefined}>
         <ResponsiveBar
           data={envSrcData}
           theme={nivoTheme}
           keys={envKeys}
           indexBy="bassin"
-          margin={{ top: 10, right: 260, bottom: 40, left: 40 }}
+          margin={{ top: 10, right: isMobile ? 12 : 260, bottom: 40, left: 40 }}
           padding={0.3}
           colors={SERIES_HEX}
+          axisBottom={{ format: (v) => truncate(v, isMobile ? 12 : 40) }}
           tooltip={chartTooltip}
-          legends={[
+          legends={isMobile ? [] : [
             {
               dataFrom: "keys",
               anchor: "right",
@@ -222,6 +228,7 @@ function EnvTab({ rows }: { rows: Occurrence[] }) {
 }
 
 function StratiTab({ rows }: { rows: Occurrence[] }) {
+  const isMobile = useIsMobile();
   const bassins = Array.from(new Set(rows.map((r) => r.bassin).filter((b): b is string => !!b))).sort();
   const biozones = Array.from(new Set(rows.map((r) => r.biozones).filter((b): b is string => !!b)));
   const biozoneData = biozones.map((bz) => {
@@ -239,19 +246,24 @@ function StratiTab({ rows }: { rows: Occurrence[] }) {
   return (
     <div>
       <SectionTitle>Distribution des biozones par bassin</SectionTitle>
-      <ChartCard height={380}>
+      <ChartCard
+        height={isMobile ? Math.max(320, biozones.length * 28) : 380}
+        legend={isMobile ? <ChartLegend keys={bassins} colors={SERIES_HEX} /> : undefined}
+      >
         <ResponsiveBar
-          data={biozoneData}
+          data={isMobile ? [...biozoneData].reverse() : biozoneData}
           theme={nivoTheme}
           keys={bassins}
           indexBy="biozone"
           groupMode="grouped"
-          margin={{ top: 10, right: 200, bottom: 80, left: 40 }}
+          layout={isMobile ? "horizontal" : "vertical"}
+          margin={isMobile ? { top: 10, right: 12, bottom: 30, left: 110 } : { top: 10, right: 200, bottom: 80, left: 40 }}
           padding={0.3}
           colors={SERIES_HEX}
-          axisBottom={{ tickRotation: -40 }}
+          axisBottom={isMobile ? {} : { tickRotation: -40 }}
+          axisLeft={isMobile ? { format: (v) => truncate(v, 16) } : {}}
           tooltip={chartTooltip}
-          legends={[
+          legends={isMobile ? [] : [
             {
               dataFrom: "keys",
               anchor: "right",

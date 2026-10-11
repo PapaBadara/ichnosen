@@ -87,6 +87,28 @@
   flex-shrink: 0;
 }
 
+.lp-burger,
+.lp-backdrop {
+  display: none;
+}
+
+.lp-burger {
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--brand-cream);
+  cursor: pointer;
+}
+
+.lp-header.is-open .lp-burger {
+  border-color: var(--brand-copper);
+}
+
 /* Décalage pour l'en-tête collant lors du défilement vers une ancre */
 .lp section[id] {
   scroll-margin-top: 72px;
@@ -458,32 +480,63 @@
   }
 
   .lp-header {
-    flex-wrap: wrap;
-    row-gap: 10px;
-    padding: 12px 16px 0;
+    padding: 10px 16px;
   }
 
-  /* Le menu des sections passe sur une seconde ligne, défilable */
+  .lp-header-cta {
+    margin-left: auto;
+  }
+
+  .lp-burger {
+    display: flex;
+  }
+
+  /* Menu hamburger : sections dans un panneau déroulant sous l'en-tête */
   .lp-nav {
-    order: 3;
-    margin: 0 -16px;
-    padding: 0 16px 10px;
-    gap: 22px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    width: calc(100% + 32px);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin: 0;
+    padding: 8px 12px 14px;
+    background: var(--page-plane);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .lp-header.is-open .lp-nav {
+    display: flex;
   }
 
   .lp-nav-link {
-    white-space: nowrap;
+    padding: 13px 14px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
   }
 
   .lp-nav-link.is-active {
-    text-underline-offset: 6px;
+    text-decoration: none;
+    background: var(--surface-3);
+  }
+
+  /* Le backdrop-filter de l'en-tête en fait le bloc conteneur des enfants fixes :
+     top: 100% place donc le voile juste sous l'en-tête. */
+  .lp-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: 100%;
+    height: 100dvh;
+    background: rgba(0, 0, 0, 0.5);
   }
 
   .lp section[id] {
-    scroll-margin-top: 100px;
+    scroll-margin-top: 72px;
   }
 
   .lp-lead {

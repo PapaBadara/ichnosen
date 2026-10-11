@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronUp, Eye, Search, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Search, SlidersHorizontal, X } from "lucide-react";
 import "./datatable.css";
 
 const PAGE_SIZES = [5, 10, 20, 40, 80, 100];
@@ -66,6 +66,8 @@ export function DataTable<T>({
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [page, setPage] = useState(1);
+  // Sur mobile, les filtres de colonnes sont repliés derrière un bouton.
+  const [showFilters, setShowFilters] = useState(false);
 
   const filterCols = columns.filter((c) => c.filter);
   const searchIndex = useMemo(
@@ -148,6 +150,16 @@ export function DataTable<T>({
             />
           </div>
         )}
+        {filterCols.length > 0 && (
+          <button
+            className={`dt-filters-toggle${activeFilters.length ? " is-set" : ""}`}
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+          >
+            <SlidersHorizontal size={14} strokeWidth={1.75} aria-hidden />
+            Filtres{activeFilters.length > 0 && ` (${activeFilters.length})`}
+          </button>
+        )}
         <p className="dt-count">
           <strong>{visible.length}</strong> résultat{visible.length > 1 ? "s" : ""}
           {visible.length !== rows.length && <span> sur {rows.length}</span>}
@@ -155,7 +167,7 @@ export function DataTable<T>({
       </div>
 
       {filterCols.length > 0 && (
-        <div className="dt-filters">
+        <div className={`dt-filters${showFilters ? " is-open" : ""}`}>
           {filterCols.map((col) =>
             col.filter === "select" ? (
               <label key={col.key} className={`dt-filter${filters[col.key] ? " is-set" : ""}`}>
@@ -202,6 +214,30 @@ export function DataTable<T>({
         </div>
       )}
 
+      {/* Tri sur mobile : l'en-tête du tableau est masqué au profit de cartes */}
+      <label className="dt-mobile-sort">
+        Trier par
+        <select
+          value={sort ? `${sort.key}:${sort.dir}` : ""}
+          onChange={(e) => {
+            const [key, dir] = e.target.value.split(":");
+            setSort(key ? { key, dir: Number(dir) as 1 | -1 } : null);
+          }}
+        >
+          <option value="">Ordre par défaut</option>
+          {columns
+            .filter((c) => c.sortable !== false)
+            .flatMap((c) => [
+              <option key={`${c.key}:1`} value={`${c.key}:1`}>
+                {c.label} (croissant)
+              </option>,
+              <option key={`${c.key}:-1`} value={`${c.key}:-1`}>
+                {c.label} (décroissant)
+              </option>,
+            ])}
+        </select>
+      </label>
+
       <div className="dt-scroll scrollbar-thin">
         <table className="dt-table">
           <thead>
@@ -244,13 +280,18 @@ export function DataTable<T>({
                   {columns.map((col) => {
                     const raw = asText(col.value(row));
                     return (
-                      <td key={col.key} style={{ textAlign: col.align ?? "left" }} title={col.render ? undefined : raw}>
+                      <td
+                        key={col.key}
+                        data-label={col.label}
+                        style={{ textAlign: col.align ?? "left" }}
+                        title={col.render ? undefined : raw}
+                      >
                         {col.render ? col.render(row) : raw || <span className="dt-null">-</span>}
                       </td>
                     );
                   })}
                   {onView && (
-                    <td style={{ textAlign: "right" }}>
+                    <td className="dt-actions" style={{ textAlign: "right" }}>
                       <button className="dt-view" onClick={() => onView(row)}>
                         <Eye size={14} strokeWidth={1.75} aria-hidden />
                         Détail

@@ -325,17 +325,180 @@ th[style*="right"] .dt-sort {
   padding: 0 4px;
 }
 
+/* Contrôles réservés au mobile */
+
+.dt-filters-toggle,
+.dt-mobile-sort {
+  display: none;
+}
+
+.dt-filters-toggle {
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--brand-cream);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dt-filters-toggle.is-set {
+  border-color: var(--brand-copper);
+}
+
+.dt-filters-toggle svg {
+  color: var(--brand-copper);
+}
+
+.dt-mobile-sort {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.dt-mobile-sort select {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
 @media (max-width: 640px) {
+  /* Champs à 16 px : évite le zoom automatique de Safari iOS à la saisie */
+  .dt-search input,
+  .dt-filter select,
+  .dt-filter input,
+  .dt-size select,
+  .dt-mobile-sort select {
+    font-size: 16px;
+  }
+
+  .dt-search {
+    flex-basis: 100%;
+  }
+
+  .dt-filters-toggle,
+  .dt-mobile-sort {
+    display: flex;
+  }
+
+  .dt-count {
+    margin-left: auto;
+  }
+
+  .dt-filters {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dt-filters.is-open {
+    display: grid;
+  }
+
+  /* Le tableau devient une liste de cartes : une ligne = une carte, libellé à gauche */
+  .dt-scroll {
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+  }
+
+  .dt-table {
+    min-width: 0;
+  }
+
+  .dt-table thead {
+    display: none;
+  }
+
+  .dt-table,
+  .dt-table tbody,
+  .dt-table tr,
+  .dt-table td {
+    display: block;
+  }
+
+  .dt-table tbody tr {
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-1);
+  }
+
+  .dt-table tbody tr:hover td {
+    background: none;
+  }
+
+  .dt-table td {
+    display: grid;
+    grid-template-columns: minmax(90px, 38%) 1fr;
+    gap: 12px;
+    align-items: center;
+    max-width: none;
+    padding: 5px 14px;
+    border-bottom: none;
+    text-align: left !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Champs vides : inutiles dans une carte */
+  .dt-table td:has(> .dt-null:only-child) {
+    display: none;
+  }
+
+  .dt-table td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .dt-table td.dt-actions {
+    display: block;
+    padding-top: 8px;
+  }
+
+  .dt-table td.dt-actions::before,
+  .dt-table td.dt-empty::before {
+    content: none;
+  }
+
+  .dt-table td.dt-actions .dt-view {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .dt-table td.dt-empty {
+    display: block;
+  }
+
   .dt-footer {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .dt-range {
+    text-align: center;
   }
 
   .dt-pages {
     justify-content: center;
   }
 
-  .dt-filters {
-    grid-template-columns: 1fr 1fr;
+  .dt-pages button {
+    min-width: 40px;
+    min-height: 40px;
   }
 }

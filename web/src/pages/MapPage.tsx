@@ -105,7 +105,7 @@ export function MapPage() {
         <strong style={{ color: "var(--brand-cream)" }}>{filtered.length}</strong>, un point par localité.
       </p>
 
-      <div style={{ height: 540, borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)", marginBottom: 32 }}>
+      <div className="map-frame">
         <MapContainer center={CENTER} zoom={7} style={{ height: "100%", width: "100%", background: "var(--surface-1)" }}>
           <TileLayer
             className="map-tiles-dark"
@@ -215,7 +215,7 @@ function SiteSheet({ site }: { site: Site }) {
       </div>
       <div>
         <p style={label}>Taxons signalés ({site.rows.length})</p>
-        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6, columns: "2 240px" }}>
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6, columns: "2 220px" }}>
           {site.rows.map((r) => (
             <li key={r.id}>
               <Link to={`/catalogue?taxon=${r.taxon_id}`}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { groupByTaxon, useData } from "../context/DataContext";
 import { FilterGroup } from "./FilterGroup";
+import "./filterfab.css";
 
 export function FilterFab() {
   const [open, setOpen] = useState(false);
@@ -20,48 +21,17 @@ export function FilterFab() {
 
   return (
     <>
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 2000,
-          }}
-        />
-      )}
+      {open && <div className="ff-backdrop" onClick={() => setOpen(false)} />}
 
       {open && (
-        <div
-          className="scrollbar-thin"
-          style={{
-            position: "fixed",
-            right: 24,
-            bottom: 96,
-            width: 360,
-            maxWidth: "calc(100vw - 48px)",
-            maxHeight: "70vh",
-            overflowY: "auto",
-            background: "var(--surface-1)",
-            border: "1px solid var(--border)",
-            borderRadius: 16,
-            boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
-            padding: 20,
-            zIndex: 2001,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "var(--brand-cream)" }}>
+        <div className="ff-panel scrollbar-thin" role="dialog" aria-label="Filtres">
+          <div className="ff-head">
+            <div className="ff-title">
               <SlidersHorizontal size={16} strokeWidth={1.75} color="var(--brand-copper)" aria-hidden />
               Filtres
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              aria-label="Fermer"
-              style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 4 }}
-            >
-              <X size={18} strokeWidth={1.75} />
+            <button className="ff-close" onClick={() => setOpen(false)} aria-label="Fermer">
+              <X size={20} strokeWidth={1.75} />
             </button>
           </div>
 
@@ -102,57 +72,16 @@ export function FilterFab() {
             onChange={(v) => setFilters({ ...filters, references: v })}
           />
 
-          <p style={{ fontSize: 12, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 14, marginBottom: 0 }}>
-            <strong style={{ color: "var(--brand-cream)" }}>{taxonCount}</strong> taxons affichés sur{" "}
-            <strong style={{ color: "var(--brand-cream)" }}>{allTaxonCount}</strong> total ·{" "}
-            <strong style={{ color: "var(--brand-cream)" }}>{filtered.length}</strong> occurrences
+          <p className="ff-summary">
+            <strong>{taxonCount}</strong> taxons affichés sur <strong>{allTaxonCount}</strong> total ·{" "}
+            <strong>{filtered.length}</strong> occurrences
           </p>
         </div>
       )}
 
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-label="Filtres"
-        style={{
-          position: "fixed",
-          right: 24,
-          bottom: 24,
-          width: 56,
-          height: 56,
-          borderRadius: "50%",
-          background: "var(--brand-copper)",
-          border: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
-          cursor: "pointer",
-          zIndex: 2002,
-        }}
-      >
+      <button className={`ff-fab${open ? " is-open" : ""}`} onClick={() => setOpen((o) => !o)} aria-label="Filtres">
         <SlidersHorizontal size={22} strokeWidth={2} color="#17140f" />
-        {activeGroups > 0 && (
-          <span
-            style={{
-              position: "absolute",
-              top: -2,
-              right: -2,
-              background: "var(--status-critical)",
-              color: "#fff",
-              fontSize: 11,
-              fontWeight: 700,
-              borderRadius: "50%",
-              width: 20,
-              height: 20,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "2px solid var(--page-plane)",
-            }}
-          >
-            {activeGroups}
-          </span>
-        )}
+        {activeGroups > 0 && <span className="ff-badge">{activeGroups}</span>}
       </button>
     </>
   );

@@ -5,9 +5,12 @@ import { KpiCard, SectionTitle } from "../components/KpiCard";
 import { DataTable } from "../components/DataTable";
 import { SERIES_HEX } from "../lib/colors";
 import { nivoTheme, chartTooltip } from "../lib/nivoTheme";
+import { truncate, useIsMobile } from "../lib/useIsMobile";
+import { ChartCard, ChartLegend } from "../components/ChartCard";
 
 export function Home() {
   const { filtered } = useData();
+  const isMobile = useIsMobile();
   const taxa = groupByTaxon(filtered);
 
   const nBassins = new Set(filtered.map((t) => t.bassin).filter(Boolean)).size;
@@ -53,7 +56,7 @@ export function Home() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 32, color: "var(--brand-cream)", marginBottom: 8 }}>
+      <h1 style={{ fontSize: "clamp(24px, 6vw, 32px)", color: "var(--brand-cream)", marginBottom: 8 }}>
         Ichnosen : Microfossiles du Sénégal
       </h1>
       <p style={{ color: "var(--text-secondary)", maxWidth: 680, marginBottom: 28 }}>
@@ -71,7 +74,7 @@ export function Home() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, marginBottom: 32 }}>
         <div>
           <SectionTitle>Répartition par groupe</SectionTitle>
-          <div style={{ height: 300, background: "var(--surface-1)", borderRadius: 12, border: "1px solid var(--border)" }}>
+          <ChartCard height={300}>
             <ResponsivePie
               data={pieData}
               theme={nivoTheme}
@@ -82,6 +85,7 @@ export function Home() {
               colors={SERIES_HEX}
               borderWidth={0}
               arcLabel={(d) => `${d.value}`}
+              enableArcLinkLabels={!isMobile}
               arcLinkLabelsTextColor="var(--text-secondary)"
               arcLinkLabelsColor={{ from: "color" }}
               arcLabelsTextColor="#17140f"
@@ -98,13 +102,31 @@ export function Home() {
                 },
               ]}
             />
-          </div>
+          </ChartCard>
         </div>
         <div>
           <SectionTitle>Distribution par âge géologique &amp; bassin (12 âges les plus fréquents)</SectionTitle>
-          <div style={{ height: 300, background: "var(--surface-1)", borderRadius: 12, border: "1px solid var(--border)", padding: "8px 8px 0" }}>
+          <ChartCard
+            height={isMobile ? 420 : 300}
+            legend={isMobile && topAges.length > 0 ? <ChartLegend keys={bassins} colors={SERIES_HEX} /> : undefined}
+          >
             {nGroupes === 0 || topAges.length === 0 ? (
               <p style={{ color: "var(--text-muted)", padding: 16 }}>Aucune donnée pour les filtres sélectionnés.</p>
+            ) : isMobile ? (
+              // Sur mobile : barres horizontales, les intitulés d'âge restent lisibles sans rotation.
+              <ResponsiveBar
+                data={[...barData].reverse()}
+                theme={nivoTheme}
+                keys={bassins}
+                indexBy="age"
+                layout="horizontal"
+                margin={{ top: 10, right: 12, bottom: 30, left: 116 }}
+                padding={0.25}
+                colors={SERIES_HEX}
+                axisLeft={{ format: (v) => truncate(v, 18) }}
+                enableLabel={false}
+                tooltip={chartTooltip}
+              />
             ) : (
               <ResponsiveBar
                 data={barData}
@@ -131,7 +153,7 @@ export function Home() {
                 ]}
               />
             )}
-          </div>
+          </ChartCard>
         </div>
       </div>
 

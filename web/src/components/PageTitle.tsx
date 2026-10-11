@@ -4,7 +4,7 @@ export function PageTitle({ icon: Icon, children }: { icon: LucideIcon; children
   return (
     <h1
       style={{
-        fontSize: 28,
+        fontSize: "clamp(22px, 5.5vw, 28px)",
         color: "var(--brand-cream)",
         marginBottom: 20,
         display: "flex",
